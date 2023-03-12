@@ -2,15 +2,15 @@ import mongoose from "mongoose";
 
 interface IUser extends mongoose.Document {
   id: string;
-  name: string;
+  userName: string;
   email: string;
   password: string;
-  googleId: String,
-  thumbnail: String
+  googleId: String;
+  thumbnail: String;
 }
 
 const userSchema = new mongoose.Schema({
-  name: {
+  userName: {
     type: String,
     required: true,
   },
@@ -19,14 +19,14 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   password: {
-    type: String
+    type: String,
   },
-  googleId:{ 
-    type: String
+  googleId: {
+    type: String,
   },
-  thumbnail:{
-    type: String
-  } 
+  thumbnail: {
+    type: String,
+  },
 });
 
 const UserModel = mongoose.model<IUser>("User", userSchema);

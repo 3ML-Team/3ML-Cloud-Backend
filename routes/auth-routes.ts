@@ -41,8 +41,13 @@ authRouter.post("/register", (req: Request, res: Response) => {
     });
 });
 
-authRouter.post("/google", (req: Request, res: Response) => {
-  res.send("login");
+
+authRouter.get("/google", passport.authenticate('google', {
+    scope: ['profile', 'email']
+}));
+
+authRouter.get('/google/redirect', passport.authenticate('google'), (req, res) => {
+    res.redirect('/');
 });
 
 export default authRouter;

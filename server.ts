@@ -6,6 +6,10 @@ import "dotenv/config";
 import setupPassport from './util/passport-setup';
 import passport from 'passport';
 setupPassport(passport);
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+
+
 
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
@@ -17,7 +21,7 @@ const store = new MongoDBStore({
     uri: process.env.DATABASE_URI,
     collection: 'sessions'
   });
-  
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -30,6 +34,12 @@ app.use(session({
 // Parsing Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+
 
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
@@ -39,6 +49,7 @@ if (!process.env.DATABASE_URI!) {
     console.error('DATABASE_URL not found in environment variables');
     process.exit(1);
   }
+
 async function startApp() {
   try {
     await mongoose.connect(process.env.DATABASE_URI!);
