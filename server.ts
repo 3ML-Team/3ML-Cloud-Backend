@@ -3,7 +3,9 @@ import authRouter from './routes/auth-routes';
 import indexRouter from './routes/index-routes';
 import mongoose from 'mongoose';
 import "dotenv/config";
-
+import setupPassport from './util/passport-setup';
+import passport from 'passport';
+setupPassport(passport);
 
 const app = express();
 
