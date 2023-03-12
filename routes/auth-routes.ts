@@ -2,12 +2,14 @@ import express, { Router, Request, Response } from "express";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
 import passport from "passport";
+import dotenv from "dotenv";
+dotenv.config();
 
 const authRouter: Router = express.Router();
 
 authRouter.post("/login", passport.authenticate('email-password-strategy', {
-    successRedirect: '/',
-    failureRedirect: '/login'
+    successRedirect: `${process.env.FRONTEND_URL}/`,
+    failureRedirect: `${process.env.FRONTEND_URL}/login`
 }));
 
 
@@ -20,7 +22,7 @@ authRouter.post("/register", (req: Request, res: Response) => {
     .then((user: IUser | null) => {
       if (user != null) {
         console.log("User already exists");
-        res.redirect("/login");
+        res.redirect(`${process.env.FRONTEND_URL}/login`);
       } else {
         return bcrypt.hash(password, 12).then((hashPassword) => {
           const user = new UserModel({
@@ -30,7 +32,7 @@ authRouter.post("/register", (req: Request, res: Response) => {
           });
           console.log(user);
           return UserModel.create(user).then(() => {
-            res.send("register");
+            res.redirect(`${process.env.FRONTEND_URL}/`);
           });
         });
       }
@@ -47,7 +49,7 @@ authRouter.get("/google", passport.authenticate('google', {
 }));
 
 authRouter.get('/google/redirect', passport.authenticate('google'), (req, res) => {
-    res.redirect('/');
+    res.redirect(`${process.env.FRONTEND_URL}/`);
 });
 
 
@@ -58,7 +60,7 @@ authRouter.get('/logout', (req, res, next) => {
                 console.error(err);
                 return next(err);
             }
-            res.redirect('/');
+            res.redirect(`${process.env.FRONTEND_URL}/login`);
         });
 });
 
