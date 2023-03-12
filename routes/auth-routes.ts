@@ -1,4 +1,5 @@
 import express, { Router, Request, Response } from "express";
+
 const authRouter: Router = express.Router();
 
 authRouter.post('/login', (req: Request, res:Response) => {
