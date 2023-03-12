@@ -50,4 +50,16 @@ authRouter.get('/google/redirect', passport.authenticate('google'), (req, res) =
     res.redirect('/');
 });
 
+
+authRouter.get('/logout', (req, res, next) => {
+        // handle logut with passport
+        req.logout(function(err) {
+            if (err) {
+                console.error(err);
+                return next(err);
+            }
+            res.redirect('/');
+        });
+});
+
 export default authRouter;
