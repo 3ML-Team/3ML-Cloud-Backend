@@ -24,7 +24,7 @@ function setupPassport(passport: any) {
     }
   };
 
-  passport.use(new LocalStrategy({ usernameField: "email" }, authenticateUser));
+  passport.use('email-password-strategy', new LocalStrategy({ usernameField: "email" }, authenticateUser));
   passport.serializeUser((user: any, done: done) => done(null, user.id));
   passport.deserializeUser((id: string, done: done) => {
     return done(null, UserModel.findById(id));

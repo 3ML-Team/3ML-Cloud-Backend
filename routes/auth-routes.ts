@@ -1,13 +1,15 @@
 import express, { Router, Request, Response } from "express";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
+import passport from "passport";
 
 const authRouter: Router = express.Router();
 
-authRouter.post("/login", (req: Request, res: Response) => {
-  console.log(req.body);
-  res.send("login");
-});
+authRouter.post("/login", passport.authenticate('email-password-strategy', {
+    successRedirect: '/',
+    failureRedirect: '/login'
+}));
+
 
 authRouter.post("/register", (req: Request, res: Response) => {
   const name = req.body.name;

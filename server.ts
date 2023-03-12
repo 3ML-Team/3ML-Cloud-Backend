@@ -7,7 +7,25 @@ import setupPassport from './util/passport-setup';
 import passport from 'passport';
 setupPassport(passport);
 
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
+
+
 const app = express();
+
+const store = new MongoDBStore({
+    uri: process.env.DATABASE_URI,
+    collection: 'sessions'
+  });
+  
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    store: store,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }
+  }));
+
 
 // Parsing Middleware
 app.use(express.json());
