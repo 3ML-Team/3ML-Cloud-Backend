@@ -7,11 +7,13 @@ dotenv.config();
 
 const authRouter: Router = express.Router();
 
-authRouter.post("/login", passport.authenticate('email-password-strategy', {
+authRouter.post(
+  "/login",
+  passport.authenticate("email-password-strategy", {
     successRedirect: `${process.env.FRONTEND_URL}/`,
-    failureRedirect: `${process.env.FRONTEND_URL}/login`
-}));
-
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
+  })
+);
 
 authRouter.post("/register", (req: Request, res: Response) => {
   const name = req.body.name;
@@ -43,25 +45,38 @@ authRouter.post("/register", (req: Request, res: Response) => {
     });
 });
 
+authRouter.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
 
-authRouter.get("/google", passport.authenticate('google', {
-    scope: ['profile', 'email']
-}));
-
-authRouter.get('/google/redirect', passport.authenticate('google'), (req, res) => {
+authRouter.get(
+  "/google/redirect",
+  passport.authenticate("google"),
+  (req, res) => {
     res.redirect(`${process.env.FRONTEND_URL}/`);
+  }
+);
+
+authRouter.get("/logout", (req, res, next) => {
+  // handle logut with passport
+  req.logout(function (err) {
+    if (err) {
+      console.error(err);
+      return next(err);
+    }
+    res.redirect(`${process.env.FRONTEND_URL}/login`);
+  });
 });
 
-
-authRouter.get('/logout', (req, res, next) => {
-        // handle logut with passport
-        req.logout(function(err) {
-            if (err) {
-                console.error(err);
-                return next(err);
-            }
-            res.redirect(`${process.env.FRONTEND_URL}/login`);
-        });
+authRouter.get("/userData", (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return res.status(200).json(req.user);
+  } else {
+    return res.status(401).send("User is not logged in");
+  }
 });
 
 export default authRouter;
