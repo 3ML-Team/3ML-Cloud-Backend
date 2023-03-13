@@ -4,7 +4,7 @@ import indexRouter from './routes/index-routes';
 import mongoose from 'mongoose';
 import "dotenv/config";
 import setupPassport from './util/passport-setup';
-import passport from 'passport';
+import passport, { Passport } from 'passport';
 setupPassport(passport);
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -38,6 +38,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 
