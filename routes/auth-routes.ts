@@ -7,13 +7,27 @@ dotenv.config();
 
 const authRouter: Router = express.Router();
 
+const handleLoginSuccess = (req: Request, res: Response) => {
+  res.json({ user: req.user});
+};
+const handleLoginFailure = (req: Request, res: Response) => {
+
+  res.redirect(`${process.env.FRONTEND_URL}/login`);
+};
+
 authRouter.post(
   "/login",
-  passport.authenticate("email-password-strategy", {
-    successRedirect: `${process.env.FRONTEND_URL}/`,
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
-  })
+  passport.authenticate("email-password-strategy"),
+  (req, res) => {
+    handleLoginSuccess(req, res);
+  },
+  (req, res) => {
+    handleLoginFailure(req, res);
+  }
 );
+
+
+
 
 authRouter.post("/register", (req: Request, res: Response) => {
   const name = req.body.name;
