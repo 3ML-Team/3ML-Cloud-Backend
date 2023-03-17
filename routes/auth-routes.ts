@@ -1,4 +1,4 @@
-import express, { Router, Request, Response } from "express";
+import express, { Router, Request, Response, NextFunction } from "express";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
 import passport from "passport";
@@ -7,25 +7,21 @@ dotenv.config();
 
 const authRouter: Router = express.Router();
 
-const handleLoginSuccess = (req: Request, res: Response) => {
-  res.json({ user: req.user});
-};
-const handleLoginFailure = (req: Request, res: Response) => {
-
-  res.redirect(`${process.env.FRONTEND_URL}/login`);
-};
-
 authRouter.post(
   "/login",
-  passport.authenticate("email-password-strategy"),
-  (req, res) => {
-    handleLoginSuccess(req, res);
-  },
-  (req, res) => {
-    handleLoginFailure(req, res);
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("email-password-strategy", (err: Error, user: IUser, info: any) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      if (!user) {
+        // Benutzer nicht gefunden oder ungültiges Passwort
+        return res.status(401).json({ error: info.message });
+      }
+      return res.status(200).json(user);
+    })(req, res, next);
   }
 );
-
 
 
 
@@ -42,7 +38,7 @@ authRouter.post("/register", (req: Request, res: Response) => {
       } else {
         return bcrypt.hash(password, 12).then((hashPassword) => {
           const user = new UserModel({
-            name: name,
+            userName: name,
             email: email,
             password: hashPassword,
           });

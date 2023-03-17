@@ -3,12 +3,13 @@ import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
 import "dotenv/config";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import passport from "passport";
 
 // Define the types for the function arguments
-type done = (error: any, user?: any, options?: { message: string }) => void;
+type done = (error: any, user?: any | null, options?: { message: string }) => void;
 
 function setupPassport(passport: any) {
-  passport.serializeUser((user: any, done: done) => done(null, user.id));
+  passport.serializeUser((user: IUser, done: done) => done(null, user.id));
   passport.deserializeUser(async (id: string, done: done) => {
     try {
       const user = await UserModel.findById(id);
@@ -24,8 +25,8 @@ function setupPassport(passport: any) {
     done: done
   ) => {
     const user: IUser | null = await UserModel.findOne({ email: email });
-
-    if (!user) {
+    console.log(user);
+    if (user == null) {
       return done(null, false, { message: "No user with that email" });
     }
 
