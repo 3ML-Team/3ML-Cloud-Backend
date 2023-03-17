@@ -68,7 +68,7 @@ function setupPassport(passport: any) {
           const googleId = profile.id;
           const thumbnail = profile.photos?.[0].value;
 
-          let currentUser = await UserModel.findOne({ googleId: profile.id });
+          let currentUser = await UserModel.findOne({ email: email });
           if (currentUser != null) {
             // Update Information
             currentUser.userName = username;
