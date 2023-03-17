@@ -80,27 +80,20 @@ authRouter.get(
   "/google/redirect",
   passport.authenticate("google"),
   (req, res) => {
-    res.redirect(`${process.env.FRONTEND_URL}/`);
+    return res.status(200).json(req.user);
   }
 );
 
 authRouter.get("/logout", (req, res, next) => {
-  // handle logut with passport
+  // handle logout with passport
   req.logout(function (err) {
     if (err) {
       console.error(err);
       return next(err);
     }
-    res.redirect(`${process.env.FRONTEND_URL}/login`);
+    return res.status(200).json({ "message": "User successfully logged out." });
   });
 });
 
-authRouter.get("/userData", (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return res.status(200).json(req.user);
-  } else {
-    return res.status(401).send("User is not logged in");
-  }
-});
 
 export default authRouter;
