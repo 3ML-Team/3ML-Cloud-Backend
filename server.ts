@@ -3,7 +3,7 @@ import authRouter from './routes/auth-routes';
 import indexRouter from './routes/index-routes';
 import mongoose from 'mongoose';
 import "dotenv/config";
-import setupPassport from './util/passport-setup';
+import setupPassport from './middleware/passport-setup';
 import passport, { Passport } from 'passport';
 setupPassport(passport);
 var cookieParser = require('cookie-parser');
@@ -51,6 +51,7 @@ if (!process.env.DATABASE_URI!) {
     console.error('DATABASE_URL not found in environment variables');
     process.exit(1);
   }
+  
 
 async function startApp() {
   try {
