@@ -25,35 +25,49 @@ authRouter.post(
 
 
 
-authRouter.post("/register", (req: Request, res: Response) => {
-  const name = req.body.name;
-  const email = req.body.email;
-  const password = req.body.password;
-
-  UserModel.findOne({ email: email })
-    .then((user: IUser | null) => {
-      if (user != null) {
-        console.log("User already exists");
-        res.redirect(`${process.env.FRONTEND_URL}/login`);
-      } else {
-        return bcrypt.hash(password, 12).then((hashPassword) => {
-          const user = new UserModel({
-            userName: name,
-            email: email,
-            password: hashPassword,
-          });
-          console.log(user);
-          return UserModel.create(user).then(() => {
-            res.redirect(`${process.env.FRONTEND_URL}/`);
-          });
-        });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).send("Error creating user");
-    });
+authRouter.post("/login", (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate("email-password-strategy", (err: Error, user: IUser, info: any) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (!user) {
+      // Benutzer nicht gefunden oder ungültiges Passwort
+      return res.status(401).json({ error: info.message });
+    }
+    return res.status(200).json(user);
+  })(req, res, next);
 });
+
+authRouter.post("/register", async (req: Request, res: Response) => {
+  try {
+    const name = req.body.name;
+    const email = req.body.email;
+    const password = req.body.password;
+
+    const user = await UserModel.findOne({ email: email });
+
+    if (user) {
+      console.log("User already exists");
+      return res.status(409).json({ error: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const newUser = new UserModel({
+      userName: name,
+      email: email,
+      password: hashedPassword,
+    });
+
+    UserModel.create(newUser);
+    console.log(newUser);
+
+    return res.status(201).json(newUser);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: "Error creating user" });
+  }
+});
+
 
 authRouter.get(
   "/google",
