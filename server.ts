@@ -1,6 +1,5 @@
 import express, { Router, Request, Response } from 'express';
 import authRouter from './routes/auth-routes';
-import indexRouter from './routes/index-routes';
 import mongoose from 'mongoose';
 import "dotenv/config";
 import setupPassport from './middleware/passport-setup';
@@ -42,8 +41,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-
-app.use('/', indexRouter);
 app.use('/auth', authRouter);
 
 //start app;
