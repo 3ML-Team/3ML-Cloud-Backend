@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, response } from "express";
+import { Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
@@ -39,7 +39,8 @@ export const postRegister = async (req: Request, res: Response) => {
       password: hashedPassword,
     });
 
-    UserModel.create(newUser);
+    await newUser.save(); // Use .save() to save the new user to the database
+
     console.log(newUser);
 
     return res.status(201).json(newUser);
@@ -49,18 +50,35 @@ export const postRegister = async (req: Request, res: Response) => {
   }
 };
 
-export const googleAuth = passport.authenticate("google", {
+export const googleAuthentication = passport.authenticate("google", {
   scope: ["profile", "email"],
 });
 
-export const handleGoogleAuthRedirect = passport.authenticate("google");
-(req: Request, res: Response) => {
-  return res.status(200).json(req.user);
+export const handleGoogleAuthRedirect = (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate("google", (err: Error, user: IUser) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    return res.status(200).json(user || req.user); // Return either the user object or req.user if user is undefined
+  })(req, res, next);
 };
+
+
+export const handleLogout = (req: Request, res: Response, next: NextFunction) => {
+  req.logout(function (err) {
+    if (err) {
+      console.error(err);
+      return next(err);
+    }
+    return res.status(200).json({ message: "User successfully logged out." });
+  });
+}
 
 export default {
   postLogin,
   postRegister,
-  googleAuth,
-  handleGoogleAuthRedirect
+  googleAuthentication,
+  handleGoogleAuthRedirect,
+  handleLogout
 };
+
