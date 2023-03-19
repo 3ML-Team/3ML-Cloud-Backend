@@ -7,7 +7,7 @@ import passport, { Passport } from 'passport';
 setupPassport(passport);
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+var cors = require('cors');
 
 
 const session = require('express-session');
@@ -37,6 +37,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(cors());
 app.use(passport.initialize());
 app.use(passport.session());
 
