@@ -8,26 +8,8 @@ setupPassport(passport);
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
-
-
-const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
-
-
 const app = express();
 
-const store = new MongoDBStore({
-    uri: process.env.DATABASE_URI,
-    collection: 'sessions'
-  });
-
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    store: store,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }
-  }));
 
 
 // Parsing Middleware
@@ -38,9 +20,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
-app.use(passport.initialize());
-app.use(passport.session());
-
 
 app.use('/auth', authRouter);
 
