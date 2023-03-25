@@ -2,21 +2,28 @@ import { Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-export const postLogin = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate(
-    "email-password-strategy",
-    (err: Error, user: IUser, info: any) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      if (!user) {
-        // Benutzer nicht gefunden oder ungültiges Passwort
-        return res.status(401).json({ error: info.message });
-      }
-      return res.status(200).json(user);
+export const postLogin = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await UserModel.findOne({ email: email });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password" });
     }
-  )(req, res, next);
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+    setTokenCookie (res, user);
+
+    return res.status(200).json({ user });
+  } catch (error: any) {
+    console.error(error.message);
+    return res.status(500).json({ error: "Server error" });
+  }
 };
 
 export const postRegister = async (req: Request, res: Response) => {
@@ -39,9 +46,8 @@ export const postRegister = async (req: Request, res: Response) => {
       password: hashedPassword,
     });
 
-    await newUser.save(); // Use .save() to save the new user to the database
-
-    console.log(newUser);
+    await newUser.save();
+    setTokenCookie (res, newUser);
 
     return res.status(201).json(newUser);
   } catch (err) {
@@ -59,7 +65,7 @@ export const handleGoogleAuthRedirect = (req: Request, res: Response, next: Next
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    return res.status(200).json(user || req.user); // Return either the user object or req.user if user is undefined
+    return res.status(200).json(user || req.user);
   })(req, res, next);
 };
 
@@ -72,13 +78,51 @@ export const handleLogout = (req: Request, res: Response, next: NextFunction) =>
     }
     return res.status(200).json({ message: "User successfully logged out." });
   });
-}
+};
+
+const setTokenCookie  = (res: Response, user: IUser) => {
+  const secret = process.env.JWT_SECRET as string;
+  const userObject =     {
+    userId: user._id,
+    email: user.email,
+    username: user.userName,
+  };
+  const token = jwt.sign( userObject , secret, { expiresIn: "1h" });
+  res.cookie("jwt", token, {
+    httpOnly: true,
+    maxAge: 3600000, // 1 hour
+  });
+  return token;
+};
+
+export const authMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.cookies.jwt;
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized: Missing token" });
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET as string) ;
+    req.user = user;
+
+    return next();
+  } catch (error) {
+    console.error(error);
+    return res.status(401).json({ error: "Unauthorized: Invalid token" });
+  }
+};
 
 export default {
   postLogin,
   postRegister,
   googleAuthentication,
   handleGoogleAuthRedirect,
-  handleLogout
+  handleLogout,
+  authMiddleware
 };
 
