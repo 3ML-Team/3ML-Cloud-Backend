@@ -41,7 +41,7 @@ export const postRegister = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = new UserModel({
-      userName: name,
+      username: name,
       email: email,
       password: hashedPassword,
     });
@@ -85,7 +85,7 @@ const setTokenCookie  = (res: Response, user: IUser) => {
   const userObject =     {
     userId: user._id,
     email: user.email,
-    username: user.userName,
+    username: user.username,
   };
   const token = jwt.sign( userObject , secret, { expiresIn: "1h" });
   res.cookie("jwt", token, {

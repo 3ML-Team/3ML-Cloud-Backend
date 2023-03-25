@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 interface IUser extends mongoose.Document {
   id: string;
-  userName: string;
+  username: string;
   email: string;
   password: string;
   googleId: String;
@@ -10,7 +10,7 @@ interface IUser extends mongoose.Document {
 }
 
 const userSchema = new mongoose.Schema({
-  userName: {
+  username: {
     type: String,
     // required: true,
   },

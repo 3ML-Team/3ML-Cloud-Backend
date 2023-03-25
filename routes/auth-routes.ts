@@ -19,4 +19,10 @@ authRouter.get("/google/redirect", authController.handleGoogleAuthRedirect);
 // Handles logout
 authRouter.get("/logout", handleLogout);
 
+authRouter.get("/home", authController.authMiddleware, (req: Request, res: Response) => {
+    console.log("home");
+    res.send("home");
+});
+
+
 export default authRouter;

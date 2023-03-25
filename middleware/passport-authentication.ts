@@ -46,7 +46,7 @@ export const authenticateUserWithGoogle = async (
     let currentUser = await UserModel.findOne({ email: email });
     if (currentUser != null) {
       // Update Information
-      currentUser.userName = username;
+      currentUser.username = username;
       currentUser.email = email!;
       currentUser.thumbnail = thumbnail!;
 
