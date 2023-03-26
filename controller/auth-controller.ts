@@ -2,8 +2,18 @@ import { Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
+import "dotenv/config";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 
+const transporter = nodemailer.createTransport({
+  service: "hotmail",
+  auth: {
+    user: process.env.OUTLOOK_EMAIL,
+    pass: process.env.OUTLOOK_PASSWORD,
+  },
+});
 
 export const postLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -16,9 +26,9 @@ export const postLogin = async (req: Request, res: Response) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid password" });
     }
-    setTokenCookie (res, user);
+    setTokenCookie(res, user);
 
     return res.status(200).json({ user });
   } catch (error: any) {
@@ -48,7 +58,7 @@ export const postRegister = async (req: Request, res: Response) => {
     });
 
     await newUser.save();
-    setTokenCookie (res, newUser);
+    setTokenCookie(res, newUser);
 
     return res.status(201).json(newUser);
   } catch (err) {
@@ -92,7 +102,7 @@ export const handleGoogleAuthRedirect = (
           googleId: googleId,
           thumbnail: thumbnail,
         });
-        setTokenCookie (res, currentUser);
+        setTokenCookie(res, currentUser);
         res.status(200).json(currentUser);
       }
     } catch (err: any) {
@@ -107,6 +117,40 @@ export const handleLogout = (req: Request, res: Response) => {
   // Optional: Lösche das Refresh-Token-Cookie, falls verwendet
   // res.clearCookie("refreshToken");
   res.status(200).json({ message: "User successfully logged out." });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const email = req.body.email;
+    const buffer = crypto.randomBytes(32);
+    const token = buffer.toString("hex");
+    const user = await UserModel.findOne({ email: email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ error: "No account with that email found." });
+    }
+
+    user.resetToken = token;
+    user.resetTokenExpiration = new Date(Date.now() + 3600000);
+    await user.save();
+    
+    transporter.sendMail({
+      to: email,
+      from: process.env.OUTLOOK_EMAIL,
+      subject: "Password reset",
+      html: `
+        <p>You requested a password reset</p>
+        <p>Click this <a href="http://localhost:8080/auth/resetpassword/${token}">link</a> to set a new password.</p>
+      `,
+    });
+
+    res.status(200).json({ message: "Password reset email sent." });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Server error" });
+  }
 };
 
 
@@ -131,6 +175,6 @@ export default {
   postRegister,
   googleAuthentication,
   handleGoogleAuthRedirect,
-  handleLogout
+  handleLogout,
+  resetPassword
 };
-
