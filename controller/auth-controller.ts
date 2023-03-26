@@ -4,6 +4,7 @@ import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+
 export const postLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -100,16 +101,14 @@ export const handleGoogleAuthRedirect = (
   })(req, res, next);
 };
 
+export const handleLogout = (req: Request, res: Response) => {
+  res.clearCookie("jwt");
 
-export const handleLogout = (req: Request, res: Response, next: NextFunction) => {
-  req.logout(function (err) {
-    if (err) {
-      console.error(err);
-      return next(err);
-    }
-    return res.status(200).json({ message: "User successfully logged out." });
-  });
+  // Optional: Lösche das Refresh-Token-Cookie, falls verwendet
+  // res.clearCookie("refreshToken");
+  res.status(200).json({ message: "User successfully logged out." });
 };
+
 
 const setTokenCookie = (res: Response, user: IUser) => {
   const secret = process.env.JWT_SECRET as string;

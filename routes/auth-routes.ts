@@ -3,6 +3,7 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 import authController, { handleLogout } from "../controller/auth-controller";
+import authentication from "../middleware/authentication";
 
 const authRouter: Router = express.Router();
 
@@ -19,7 +20,7 @@ authRouter.get("/google/redirect", authController.handleGoogleAuthRedirect);
 // Handles logout
 authRouter.get("/logout", handleLogout);
 
-authRouter.get("/home", authController.authMiddleware, (req: Request, res: Response) => {
+authRouter.get("/home", authentication.isLoggedIn, (req: Request, res: Response) => {
     console.log("home");
     res.send("home");
 });
