@@ -20,7 +20,11 @@ authRouter.get("/google/redirect", authController.handleGoogleAuthRedirect);
 // Handles logout
 authRouter.get("/logout", authController.handleLogout);
 
-authRouter.post("/resetpassword", authController.resetPassword)
+authRouter.post("/resetPassword", authController.resetPassword)
+authRouter.get("/getNewPassword/:token", authController.getNewPassword)
+authRouter.post("/postNewPassword", authController.postNewPassword)
+
+
 
 authRouter.get("/home", authentication.isLoggedIn, (req: Request, res: Response) => {
     console.log("home");

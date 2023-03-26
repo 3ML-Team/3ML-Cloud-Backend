@@ -7,8 +7,8 @@ interface IUser extends mongoose.Document {
   password: string;
   googleId: String;
   thumbnail: String;
-  resetToken: String;
-  resetTokenExpiration: Date;
+  resetToken: String | undefined;
+  resetTokenExpiration: Date | undefined;
 }
 
 const userSchema = new mongoose.Schema({

@@ -135,14 +135,14 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.resetToken = token;
     user.resetTokenExpiration = new Date(Date.now() + 3600000);
     await user.save();
-    
+
     transporter.sendMail({
       to: email,
       from: process.env.OUTLOOK_EMAIL,
       subject: "Password reset",
       html: `
         <p>You requested a password reset</p>
-        <p>Click this <a href="http://localhost:8080/auth/resetpassword/${token}">link</a> to set a new password.</p>
+        <p>Click this <a href="http://localhost:8080/auth/getNewPassword/${token}">link</a> to set a new password.</p>
       `,
     });
 
@@ -153,6 +153,55 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const getNewPassword = async (req: Request, res: Response) => {
+  try {
+    const token = req.params.token;
+    const user = await UserModel.findOne({
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "No user found or token has expired" });
+    }
+
+
+    res.status(200).json({ message: "Token is valid, you can reset the password.", token });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+export const postNewPassword = async (req: Request, res: Response) => {
+  const newPassword = req.body.password;
+  const userId = req.body.userId;
+  const passwordToken = req.body.passwordToken;
+
+  try {
+    const user = await UserModel.findOne({
+      resetToken: passwordToken,
+      resetTokenExpiration: { $gt: Date.now() },
+      _id: userId,
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid token or user ID" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error updating password" });
+  }
+};
 
 const setTokenCookie = (res: Response, user: IUser) => {
   const secret = process.env.JWT_SECRET as string;
@@ -176,5 +225,7 @@ export default {
   googleAuthentication,
   handleGoogleAuthRedirect,
   handleLogout,
-  resetPassword
+  resetPassword,
+  getNewPassword,
+  postNewPassword,
 };
