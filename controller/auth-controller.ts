@@ -4,17 +4,9 @@ import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
 import "dotenv/config";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import crypto from "crypto";
-import { getEmailTemplate } from "../asset/email-template";
+import { getEmailTemplate, transporter } from "../asset/email-template";
 
-const transporter = nodemailer.createTransport({
-  service: "hotmail",
-  auth: {
-    user: process.env.OUTLOOK_EMAIL,
-    pass: process.env.OUTLOOK_PASSWORD,
-  },
-});
 
 export const postLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -226,6 +218,8 @@ const setTokenCookie = (res: Response, user: IUser) => {
   });
   return token;
 };
+
+
 
 export default {
   postLogin,
