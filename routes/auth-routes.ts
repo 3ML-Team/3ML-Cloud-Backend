@@ -23,8 +23,13 @@ authRouter.get("/logout", authController.handleLogout);
 
 authRouter.post("/request-password-reset", authController.requestPasswordReset);
 authRouter.get("/validate-reset-token", authController.validateResetToken);
-//Muss eigentlich ein patch request sein.
+//Should be a patch request.
 authRouter.post("/submit-new-password", authController.submitNewPassword);
+
+//Should be a patch request.
+authRouter.post("/request-email-reset", authentication.isLoggedIn((req, res, user) => {
+    authController.updateEmail(req, res, user);
+  }),);
 
 
 authRouter.delete("/delete", authentication.isLoggedIn((req, res, user) => {

@@ -204,6 +204,37 @@ export const submitNewPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const updateEmail = async (req: Request, res: Response, user: UserPayload) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    if (user.email) {
+      // Überprüfen, ob die neue E-Mail bereits vorhanden ist
+      const emailExists = await UserModel.findOne({ email });
+      if (emailExists) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { email: user.email },
+        { email },
+        { new: true }
+      );
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      return res.status(200).json({ message: 'Email updated', user: updatedUser });
+    } else {
+      return res.status(400).json({ error: 'User email not found' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Error updating email', message: error.message });
+  }
+};
+
+
+
 export const deleteUser = async (req: Request, res: Response, user: UserPayload) => {
   try {
     if (user.email) {
@@ -216,6 +247,8 @@ export const deleteUser = async (req: Request, res: Response, user: UserPayload)
     return res.status(500).json({ error: 'Error deleting user', message: error.message });
   }
 };
+
+
 
 
 
@@ -246,5 +279,6 @@ export default {
   requestPasswordReset,
   validateResetToken,
   submitNewPassword,
-  deleteUser
+  deleteUser,
+  updateEmail
 };
