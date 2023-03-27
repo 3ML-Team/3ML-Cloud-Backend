@@ -3,7 +3,8 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 import authController from "../controller/auth-controller";
-import authentication from "../middleware/authentication";
+import * as authentication from "../middleware/authentication";
+import { UserPayload } from "../interfaces/UserPayload";
 
 const authRouter: Router = express.Router();
 
@@ -22,14 +23,13 @@ authRouter.get("/logout", authController.handleLogout);
 
 authRouter.post("/request-password-reset", authController.requestPasswordReset)
 authRouter.get("/validate-reset-token", authController.validateResetToken)
+//Muss eigentlich ein patch request sein.
 authRouter.post("/submit-new-password", authController.submitNewPassword)
 
 
-
-authRouter.get("/home", authentication.isLoggedIn, (req: Request, res: Response) => {
-    console.log("home");
-    res.send("home");
-});
+authRouter.get("/home", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
+    res.send("home, User email: " + user.email);
+  }));
 
 
 export default authRouter;
