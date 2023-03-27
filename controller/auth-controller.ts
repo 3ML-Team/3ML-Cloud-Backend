@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import passport from "passport";
+import passport, { use } from "passport";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
 import "dotenv/config";
@@ -119,11 +119,11 @@ export const handleLogout = (req: Request, res: Response) => {
   res.status(200).json({ message: "User successfully logged out." });
 };
 
-export const resetPassword = async (req: Request, res: Response) => {
+export const requestPasswordReset = async (req: Request, res: Response) => {
   try {
     const email = req.body.email;
     const buffer = crypto.randomBytes(32);
-    const token = buffer.toString("hex");
+    const resetToken = buffer.toString("hex");
     const user = await UserModel.findOne({ email: email });
 
     if (!user) {
@@ -132,17 +132,18 @@ export const resetPassword = async (req: Request, res: Response) => {
         .json({ error: "No account with that email found." });
     }
 
-    user.resetToken = token;
+    user.resetToken = resetToken;
     user.resetTokenExpiration = new Date(Date.now() + 3600000);
     await user.save();
 
+    //Redirect to the reset password page where users can enter their new password.
     transporter.sendMail({
       to: email,
       from: process.env.OUTLOOK_EMAIL,
       subject: "Password reset",
       html: `
         <p>You requested a password reset</p>
-        <p>Click this <a href="http://localhost:8080/auth/getNewPassword/${token}">link</a> to set a new password.</p>
+        <p>Click this <a href="http://localhost:8080/auth/getNewPassword/${resetToken}">link</a> to set a new password.</p>
       `,
     });
 
@@ -153,11 +154,11 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-export const getNewPassword = async (req: Request, res: Response) => {
+export const validateResetToken = async (req: Request, res: Response) => {
   try {
-    const token = req.params.token;
+    const resetToken = req.params.resetToken;
     const user = await UserModel.findOne({
-      resetToken: token,
+      resetToken: resetToken,
       resetTokenExpiration: { $gt: Date.now() },
     });
 
@@ -167,27 +168,24 @@ export const getNewPassword = async (req: Request, res: Response) => {
         .json({ error: "No user found or token has expired" });
     }
 
-
-    res.status(200).json({ message: "Token is valid, you can reset the password.", token });
+    res.status(200).json({ message: "Token is valid, you can reset the password.", token: resetToken });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Server error" });
   }
 };
-export const postNewPassword = async (req: Request, res: Response) => {
+export const submitNewPassword = async (req: Request, res: Response) => {
   const newPassword = req.body.password;
-  const userId = req.body.userId;
-  const passwordToken = req.body.passwordToken;
+  const resetToken = req.body.resetToken;
 
   try {
     const user = await UserModel.findOne({
-      resetToken: passwordToken,
+      resetToken: resetToken,
       resetTokenExpiration: { $gt: Date.now() },
-      _id: userId,
     });
 
     if (!user) {
-      return res.status(400).json({ error: "Invalid token or user ID" });
+      return res.status(400).json({ error: "Invalid token" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -202,6 +200,7 @@ export const postNewPassword = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error updating password" });
   }
 };
+
 
 const setTokenCookie = (res: Response, user: IUser) => {
   const secret = process.env.JWT_SECRET as string;
@@ -225,7 +224,7 @@ export default {
   googleAuthentication,
   handleGoogleAuthRedirect,
   handleLogout,
-  resetPassword,
-  getNewPassword,
-  postNewPassword,
+  requestPasswordReset,
+  validateResetToken,
+  submitNewPassword
 };

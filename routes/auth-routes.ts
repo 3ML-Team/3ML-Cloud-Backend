@@ -20,9 +20,9 @@ authRouter.get("/google/redirect", authController.handleGoogleAuthRedirect);
 // Handles logout
 authRouter.get("/logout", authController.handleLogout);
 
-authRouter.post("/resetPassword", authController.resetPassword)
-authRouter.get("/getNewPassword/:token", authController.getNewPassword)
-authRouter.post("/postNewPassword", authController.postNewPassword)
+authRouter.post("/request-password-reset", authController.requestPasswordReset)
+authRouter.get("/validate-reset-token/:token", authController.validateResetToken)
+authRouter.post("/submit-new-password", authController.submitNewPassword)
 
 
 
