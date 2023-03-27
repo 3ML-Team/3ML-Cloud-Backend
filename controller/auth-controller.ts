@@ -6,6 +6,7 @@ import "dotenv/config";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import { getEmailTemplate } from "../asset/email-template";
 
 const transporter = nodemailer.createTransport({
   service: "hotmail",
@@ -30,7 +31,11 @@ export const postLogin = async (req: Request, res: Response) => {
     }
     setTokenCookie(res, user);
 
-    return res.status(200).json({ user });
+    const requestObject = {
+      email: user.email,
+      username: user.username,
+    }
+    return res.status(200).json(requestObject);
   } catch (error: any) {
     console.error(error.message);
     return res.status(500).json({ error: "Server error" });
@@ -56,11 +61,14 @@ export const postRegister = async (req: Request, res: Response) => {
       email: email,
       password: hashedPassword,
     });
-
     await newUser.save();
     setTokenCookie(res, newUser);
-
-    return res.status(201).json(newUser);
+    
+    const requestObject = {
+      username: username,
+      email: email
+    }
+    return res.status(201).json(requestObject);
   } catch (err) {
     console.log(err);
     return res.status(500).json({ error: "Error creating user" });
@@ -102,8 +110,12 @@ export const handleGoogleAuthRedirect = (
           googleId: googleId,
           thumbnail: thumbnail,
         });
+        const requestObject = {
+          username: username,
+          email: email
+        }
         setTokenCookie(res, currentUser);
-        res.status(200).json(currentUser);
+        res.status(200).json(requestObject);
       }
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -135,16 +147,13 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     user.resetToken = resetToken;
     user.resetTokenExpiration = new Date(Date.now() + 3600000);
     await user.save();
-
+    const emailTemplate: string = getEmailTemplate(resetToken); 
     //Redirect to the reset password page where users can enter their new password.
     transporter.sendMail({
       to: email,
       from: process.env.OUTLOOK_EMAIL,
       subject: "Password reset",
-      html: `
-        <p>You requested a password reset</p>
-        <p>Click this <a href="http://localhost:8080/auth/getNewPassword/${resetToken}">link</a> to set a new password.</p>
-      `,
+      html: emailTemplate
     });
 
     res.status(200).json({ message: "Password reset email sent." });
@@ -156,7 +165,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 
 export const validateResetToken = async (req: Request, res: Response) => {
   try {
-    const resetToken = req.params.resetToken;
+    const resetToken = req.query.resetToken;
     const user = await UserModel.findOne({
       resetToken: resetToken,
       resetTokenExpiration: { $gt: Date.now() },
