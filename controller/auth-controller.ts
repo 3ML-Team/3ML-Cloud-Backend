@@ -233,6 +233,30 @@ export const updateEmail = async (req: Request, res: Response, user: UserPayload
   }
 };
 
+export const updateUsername = async (req: Request, res: Response, user: UserPayload) => {
+  try {
+    const { newUsername } = req.body;
+    if (!newUsername) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+    if (user.email) {
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { email: user.email },
+        { username: newUsername },
+        { new: true }
+      );
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      return res.status(200).json({ message: 'Username updated', user: updatedUser });
+    } else {
+      return res.status(400).json({ error: 'User email not found' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Error updating username', message: error.message });
+  }
+};
+
 
 
 export const deleteUser = async (req: Request, res: Response, user: UserPayload) => {
@@ -280,5 +304,6 @@ export default {
   validateResetToken,
   submitNewPassword,
   deleteUser,
-  updateEmail
+  updateEmail,
+  updateUsername
 };

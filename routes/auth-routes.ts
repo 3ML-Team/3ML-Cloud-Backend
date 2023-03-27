@@ -31,6 +31,11 @@ authRouter.post("/request-email-reset", authentication.isLoggedIn((req, res, use
     authController.updateEmail(req, res, user);
   }),);
 
+//Should be a patch request.
+authRouter.post("/request-username-reset", authentication.isLoggedIn((req, res, user) => {
+    authController.updateUsername(req, res, user);
+  }));
+
 
 authRouter.delete("/delete", authentication.isLoggedIn((req, res, user) => {
     authController.deleteUser(req, res, user);
