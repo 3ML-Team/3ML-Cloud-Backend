@@ -6,6 +6,8 @@ import "dotenv/config";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { getEmailTemplate, transporter } from "../asset/email-template";
+import { UserPayload } from "../interfaces/UserPayload";
+import { userInfo } from "os";
 
 
 export const postLogin = async (req: Request, res: Response) => {
@@ -202,6 +204,20 @@ export const submitNewPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteUser = async (req: Request, res: Response, user: UserPayload) => {
+  try {
+    if (user.email) {
+      await UserModel.deleteOne({ email: user.email });
+      return res.status(200).json({ message: 'User deleted' });
+    } else {
+      return res.status(400).json({ error: 'User email not found' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Error deleting user', message: error.message });
+  }
+};
+
+
 
 const setTokenCookie = (res: Response, user: IUser) => {
   const secret = process.env.JWT_SECRET as string;
@@ -229,5 +245,6 @@ export default {
   handleLogout,
   requestPasswordReset,
   validateResetToken,
-  submitNewPassword
+  submitNewPassword,
+  deleteUser
 };

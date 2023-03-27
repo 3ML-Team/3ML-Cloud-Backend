@@ -21,10 +21,15 @@ authRouter.get("/google/redirect", authController.handleGoogleAuthRedirect);
 // Handles logout
 authRouter.get("/logout", authController.handleLogout);
 
-authRouter.post("/request-password-reset", authController.requestPasswordReset)
-authRouter.get("/validate-reset-token", authController.validateResetToken)
+authRouter.post("/request-password-reset", authController.requestPasswordReset);
+authRouter.get("/validate-reset-token", authController.validateResetToken);
 //Muss eigentlich ein patch request sein.
-authRouter.post("/submit-new-password", authController.submitNewPassword)
+authRouter.post("/submit-new-password", authController.submitNewPassword);
+
+
+authRouter.delete("/delete", authentication.isLoggedIn((req, res, user) => {
+    authController.deleteUser(req, res, user);
+  }),);
 
 
 authRouter.get("/home", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
