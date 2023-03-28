@@ -171,7 +171,7 @@ export const validateResetToken = async (req: Request, res: Response) => {
         .json({ error: "No user found or token has expired" });
     }
 
-    res.status(200).json({ message: "Token is valid, you can reset the password.", token: resetToken });
+    res.status(200).json({ message: "Token is valid, you can reset the password."});
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Server error" });
@@ -224,7 +224,8 @@ export const updateEmail = async (req: Request, res: Response, user: UserPayload
       if (!updatedUser) {
         return res.status(404).json({ error: 'User not found' });
       }
-      return res.status(200).json({ message: 'Email updated', user: updatedUser });
+      setTokenCookie(res, updatedUser);
+      return res.status(200).json({ message: 'Email updated'});
     } else {
       return res.status(400).json({ error: 'User email not found' });
     }
@@ -248,7 +249,8 @@ export const updateUsername = async (req: Request, res: Response, user: UserPayl
       if (!updatedUser) {
         return res.status(404).json({ error: 'User not found' });
       }
-      return res.status(200).json({ message: 'Username updated', user: updatedUser });
+      setTokenCookie(res, updatedUser);
+      return res.status(200).json({ message: 'Username updated'});
     } else {
       return res.status(400).json({ error: 'User email not found' });
     }

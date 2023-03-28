@@ -36,7 +36,7 @@ authRouter.post("/request-username-reset", authentication.isLoggedIn((req, res, 
     authController.updateUsername(req, res, user);
   }));
 
-
+//Should be delete request.
 authRouter.delete("/delete", authentication.isLoggedIn((req, res, user) => {
     authController.deleteUser(req, res, user);
   }),);
