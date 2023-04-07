@@ -161,31 +161,36 @@ export const submitNewPassword = async (req: Request, res: Response) => {
 
 export const googleAuthentication = passport.authenticate("google");
 
-export const handleGoogleAuthRedirect = (
+export const handleOAuthRedirect = (provider: string) => (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  passport.authenticate("google", async (err: Error, profile: any) => {
+  passport.authenticate(provider, async (err: Error, profile: any) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
     try {
-      const email = profile.emails![0].value;
+      const email = profile.emails?.[0].value;
       const username = profile.displayName;
       const googleId = profile.id;
       const thumbnail = profile.photos?.[0].value;
 
       let currentUser = await UserModel.findOne({ email: email });
+      const requestObject = {
+        username: username,
+        email: email,
+        thumbnail: thumbnail
+      }
       if (currentUser != null) {
         // Update Information
         currentUser.username = username;
-        currentUser.email = email!;
+        currentUser.email = email;
         currentUser.thumbnail = thumbnail!;
 
         await currentUser.save();
         console.log("Current user is: ", currentUser);
-        res.status(200).json(currentUser);
+        res.status(200).json(requestObject);
       } else {
         // Create New User
         currentUser = await UserModel.create({
@@ -194,11 +199,6 @@ export const handleGoogleAuthRedirect = (
           googleId: googleId,
           thumbnail: thumbnail,
         });
-        const requestObject = {
-          username: username,
-          email: email,
-          thumbnail: thumbnail
-        }
         setTokenCookie(res, currentUser);
         res.status(200).json(requestObject);
       }
@@ -313,7 +313,7 @@ export default {
   postLogin,
   postRegister,
   googleAuthentication,
-  handleGoogleAuthRedirect,
+  handleOAuthRedirect,
   handleLogout,
   requestPasswordReset,
   validateResetToken,
