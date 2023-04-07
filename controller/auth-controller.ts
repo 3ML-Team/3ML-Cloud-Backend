@@ -187,13 +187,14 @@ export const handleOAuthRedirect = (provider: string) => (
       };
 
       let currentUser = await UserModel.findOne({ email: email });
-
-      if (currentUser) {
+      console.log(oauthID + " " + currentUser?.oauthID);
+      console.log(oauthID == currentUser?.oauthID);
+      if (currentUser && oauthID == currentUser.oauthID) {
         // Update Information
         Object.assign(currentUser, requestObject);
         await currentUser.save();
         console.log("Current user is: ", currentUser);
-      } else {
+      } else if(currentUser == null) {
         // Create New User
         currentUser = await UserModel.create({
           ...requestObject,

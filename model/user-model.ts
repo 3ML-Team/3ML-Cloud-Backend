@@ -5,7 +5,7 @@ interface IUser extends mongoose.Document {
   username: string;
   email: string;
   password: string;
-  googleId: String;
+  oauthID: String;
   thumbnail: String;
   resetToken: String | undefined;
   resetTokenExpiration: Date | undefined;
