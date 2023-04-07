@@ -168,46 +168,47 @@ export const handleOAuthRedirect = (provider: string) => (
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+
     try {
       const email = profile.emails?.[0].value ?? profile.email;
-      const username = profile.displayName ?? `${profile.username}#${profile.discriminator}`;
+      const username =
+        profile.displayName ?? `${profile.username}#${profile.discriminator}`;
       const oauthID = profile.id;
-      const thumbnail = profile.photos?.[0].value ?? profile.avatar
-      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
-      : `https://cdn.discordapp.com/embed/avatars/${Number(profile.discriminator) % 5}.png`;
-      
-      console.log(oauthID);
-      let currentUser = await UserModel.findOne({ email: email });
-      const requestObject = {
-        username: username,
-        email: email,
-        thumbnail: thumbnail
-      }
-      if (currentUser != null) {
-        // Update Information
-        currentUser.username = username;
-        currentUser.email = email;
-        currentUser.thumbnail = thumbnail!;
+      const thumbnail =
+        profile.photos?.[0].value ??
+        (profile.avatar
+          ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+          : `https://cdn.discordapp.com/embed/avatars/${Number(profile.discriminator) % 5}.png`);
 
+      const requestObject = {
+        username,
+        email,
+        thumbnail,
+      };
+
+      let currentUser = await UserModel.findOne({ email: email });
+
+      if (currentUser) {
+        // Update Information
+        Object.assign(currentUser, requestObject);
         await currentUser.save();
         console.log("Current user is: ", currentUser);
-        res.status(200).json(requestObject);
       } else {
         // Create New User
         currentUser = await UserModel.create({
-          email: email,
-          username: username,
-          oauthID: oauthID,
-          thumbnail: thumbnail,
+          ...requestObject,
+          oauthID,
         });
         setTokenCookie(res, currentUser);
-        res.status(200).json(requestObject);
       }
+
+      res.status(200).json(requestObject);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
   })(req, res, next);
 };
+
 
 
 // Accepts newUsername from the request body and user payload. Updates the user's username, sets a token cookie, and returns a status of 200 with a message indicating that the username was updated.
