@@ -169,11 +169,14 @@ export const handleOAuthRedirect = (provider: string) => (
       return res.status(500).json({ error: err.message });
     }
     try {
-      const email = profile.emails?.[0].value;
-      const username = profile.displayName;
-      const googleId = profile.id;
-      const thumbnail = profile.photos?.[0].value;
-
+      const email = profile.emails?.[0].value ?? profile.email;
+      const username = profile.displayName ?? `${profile.username}#${profile.discriminator}`;
+      const oauthID = profile.id;
+      const thumbnail = profile.photos?.[0].value ?? profile.avatar
+      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+      : `https://cdn.discordapp.com/embed/avatars/${Number(profile.discriminator) % 5}.png`;
+      
+      console.log(oauthID);
       let currentUser = await UserModel.findOne({ email: email });
       const requestObject = {
         username: username,
@@ -194,7 +197,7 @@ export const handleOAuthRedirect = (provider: string) => (
         currentUser = await UserModel.create({
           email: email,
           username: username,
-          googleId: googleId,
+          oauthID: oauthID,
           thumbnail: thumbnail,
         });
         setTokenCookie(res, currentUser);
