@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import passport, { use } from "passport";
+import passport from "passport";
 import { UserModel, IUser } from "../model/user-model";
 import bcrypt from "bcrypt";
 import "dotenv/config";
@@ -7,8 +7,6 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { getEmailTemplate, transporter } from "../asset/email-template";
 import { UserPayload } from "../interfaces/UserPayload";
-import { userInfo } from "os";
-
 // Accepts username, email, and password from the request body.
 // Creates a new user in the database, hashes the password, sets a token cookie, and returns a status of 201 with the new user's username and email.
 export const postRegister = async (req: Request, res: Response) => {
@@ -159,7 +157,7 @@ export const submitNewPassword = async (req: Request, res: Response) => {
 };
 
 
-export const googleAuthentication = passport.authenticate("google");
+export const oauthAuthentication  = (provider: string) => passport.authenticate(provider);
 
 export const handleOAuthRedirect = (provider: string) => (
   req: Request,
@@ -312,7 +310,7 @@ const setTokenCookie = (res: Response, user: IUser) => {
 export default {
   postLogin,
   postRegister,
-  googleAuthentication,
+  oauthAuthentication ,
   handleOAuthRedirect,
   handleLogout,
   requestPasswordReset,

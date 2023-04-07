@@ -14,7 +14,7 @@ authRouter.post("/login", authController.postLogin);
 authRouter.post("/register", authController.postRegister);
 
 //Google authentication
-authRouter.get("/google", authController.googleAuthentication);
+authRouter.get("/google", authController.oauthAuthentication("google"));
 
 authRouter.get("/google/redirect", authController.handleOAuthRedirect("google"));
 
