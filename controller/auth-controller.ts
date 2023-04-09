@@ -179,39 +179,34 @@ export const handleOAuthRedirect =
             : `https://cdn.discordapp.com/embed/avatars/${
                 Number(profile.discriminator) % 5
               }.png`);
-
-        const requestObject = {
-          username,
-          email,
-          thumbnail,
-        };
-
+    
         let currentUser = await UserModel.findOne({ email: email });
-        console.log(oauthID + " " + currentUser?.oauthID);
-        console.log(oauthID == currentUser?.oauthID);
         if (currentUser && oauthID == currentUser.oauthID) {
           // Update Information
-          Object.assign(currentUser, requestObject);
+          currentUser.username = username;
+          currentUser.email = email;
+          currentUser.thumbnail = thumbnail;
           await currentUser.save();
-          console.log("Current user is: ", currentUser);
         } else if (currentUser == null) {
           // Create New User
           currentUser = await UserModel.create({
-            ...requestObject,
+            username,
+            email,
+            thumbnail,
             oauthID,
           });
           setTokenCookie(res, currentUser);
         }
-
         res
           .status(200)
           .redirect(
-            `http://localhost:3000/login?user=${JSON.stringify(requestObject)}`
+            `http://localhost:3000/login?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&thumbnail=${encodeURIComponent(thumbnail)}`
           );
       } catch (err: any) {
         res.status(500).json({ error: err.message });
       }
     })(req, res, next);
+    
   };
 
 // Accepts newUsername from the request body and user payload. Updates the user's username, sets a token cookie, and returns a status of 200 with a message indicating that the username was updated.
