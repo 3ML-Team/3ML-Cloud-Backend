@@ -203,7 +203,7 @@ export const handleOAuthRedirect = (provider: string) => (
         setTokenCookie(res, currentUser);
       }
 
-      res.status(200).json(requestObject);
+      res.status(200).redirect(`loaclhost:3000/login?user=${JSON.stringify(requestObject)}`);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
