@@ -34,18 +34,15 @@ authRouter.get("/validate-reset-token", authController.validateResetToken);
 //Should be a patch request.
 authRouter.post("/submit-new-password", authController.submitNewPassword);
 
-//Should be a patch request.
-authRouter.post("/request-email-reset", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
+authRouter.patch("/request-email-reset", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
     authController.updateEmail(req, res, user);
   }),);
 
-//Should be a patch request.
-authRouter.post("/request-username-reset", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
+authRouter.patch("/request-username-reset", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
     authController.updateUsername(req, res, user);
   }));
 
-//Should be delete request.
-authRouter.get("/delete", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
+authRouter.delete("/delete", authentication.isLoggedIn((req: Request, res: Response, user: UserPayload) => {
     authController.deleteUser(req, res, user);
   }),);
 
