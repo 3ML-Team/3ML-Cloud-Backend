@@ -170,7 +170,7 @@ export const handleOAuthRedirect =
       try {
         const email = profile.emails?.[0].value ?? profile.email;
         const username =
-          profile.displayName ?? `${profile.username}#${profile.discriminator}`;
+          profile.displayName ?? `${profile.username}`;
         const oauthID = profile.id;
         const thumbnail =
           profile.photos?.[0].value ??
@@ -179,7 +179,7 @@ export const handleOAuthRedirect =
             : `https://cdn.discordapp.com/embed/avatars/${
                 Number(profile.discriminator) % 5
               }.png`);
-
+    
         let currentUser = await UserModel.findOne({ email: email });
         if (currentUser && oauthID == currentUser.oauthID) {
           // Update Information
@@ -198,14 +198,15 @@ export const handleOAuthRedirect =
           setTokenCookie(res, currentUser);
         }
         res
-          .status(200)
-          .redirect(
-            `http://localhost:3000/login?username=${username}&email=${email}&thumbnail=${thumbnail}`
-          );
+        .status(200)
+        .redirect(
+          `http://localhost:3000/login?username=${username}&email=${email}&thumbnail=${thumbnail}`
+        );
       } catch (err: any) {
         res.status(500).json({ error: err.message });
       }
     })(req, res, next);
+    
   };
 
 // Accepts newUsername from the request body and user payload. Updates the user's username, sets a token cookie, and returns a status of 200 with a message indicating that the username was updated.
