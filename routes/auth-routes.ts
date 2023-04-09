@@ -16,10 +16,14 @@ authRouter.post("/register", authController.postRegister);
 //Oauth authentication
 authRouter.get("/google", authController.oauthAuthentication("google"));
 authRouter.get("/discord", authController.oauthAuthentication("discord"));
+authRouter.get("/github", authController.oauthAuthentication("github"));
+
 
 
 authRouter.get("/google/redirect", authController.handleOAuthRedirect("google"));
 authRouter.get("/discord/redirect", authController.handleOAuthRedirect("discord"));
+authRouter.get("/github/redirect", authController.handleOAuthRedirect("github"));
+
 
 
 // Handles logout
