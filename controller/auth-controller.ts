@@ -30,11 +30,11 @@ export const postRegister = async (req: Request, res: Response) => {
     });
     await newUser.save();
     setTokenCookie(res, newUser);
-    
+
     const requestObject = {
       username: username,
-      email: email
-    }
+      email: email,
+    };
     return res.status(201).json(requestObject);
   } catch (err) {
     console.log(err);
@@ -62,14 +62,13 @@ export const postLogin = async (req: Request, res: Response) => {
     const requestObject = {
       email: user.email,
       username: user.username,
-    }
+    };
     return res.status(200).json(requestObject);
   } catch (error: any) {
     console.error(error.message);
     return res.status(500).json({ error: "Server error" });
   }
 };
-
 
 //Reset Password
 // Accepts email from the request body. Generates a password reset token, updates the user with the token and expiration,
@@ -90,13 +89,13 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     user.resetToken = resetToken;
     user.resetTokenExpiration = new Date(Date.now() + 3600000);
     await user.save();
-    const emailTemplate: string = getEmailTemplate(resetToken); 
+    const emailTemplate: string = getEmailTemplate(resetToken);
     //Redirect to the reset password page where users can enter their new password.
     transporter.sendMail({
       to: email,
       from: process.env.OUTLOOK_EMAIL,
       subject: "Password reset",
-      html: emailTemplate
+      html: emailTemplate,
     });
 
     res.status(200).json({ message: "Password reset email sent." });
@@ -121,7 +120,9 @@ export const validateResetToken = async (req: Request, res: Response) => {
         .json({ error: "No user found or token has expired" });
     }
 
-    res.status(200).json({ message: "Token is valid, you can reset the password."});
+    res
+      .status(200)
+      .json({ message: "Token is valid, you can reset the password." });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Server error" });
@@ -156,68 +157,73 @@ export const submitNewPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const oauthAuthentication = (provider: string) =>
+  passport.authenticate(provider);
 
-export const oauthAuthentication  = (provider: string) => passport.authenticate(provider);
-
-export const handleOAuthRedirect = (provider: string) => (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  passport.authenticate(provider, async (err: Error, profile: any) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    try {
-      const email = profile.emails?.[0].value ?? profile.email;
-      const username =
-        profile.displayName ?? `${profile.username}#${profile.discriminator}`;
-      const oauthID = profile.id;
-      const thumbnail =
-        profile.photos?.[0].value ??
-        (profile.avatar
-          ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
-          : `https://cdn.discordapp.com/embed/avatars/${Number(profile.discriminator) % 5}.png`);
-
-      const requestObject = {
-        username,
-        email,
-        thumbnail,
-      };
-
-      let currentUser = await UserModel.findOne({ email: email });
-      console.log(oauthID + " " + currentUser?.oauthID);
-      console.log(oauthID == currentUser?.oauthID);
-      if (currentUser && oauthID == currentUser.oauthID) {
-        // Update Information
-        Object.assign(currentUser, requestObject);
-        await currentUser.save();
-        console.log("Current user is: ", currentUser);
-      } else if(currentUser == null) {
-        // Create New User
-        currentUser = await UserModel.create({
-          ...requestObject,
-          oauthID,
-        });
-        setTokenCookie(res, currentUser);
+export const handleOAuthRedirect =
+  (provider: string) => (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate(provider, async (err: Error, profile: any) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
       }
 
-      res.status(200).redirect(`localhost:3000/login?user=${JSON.stringify(requestObject)}`);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
-    }
-  })(req, res, next);
-};
+      try {
+        const email = profile.emails?.[0].value ?? profile.email;
+        const username =
+          profile.displayName ?? `${profile.username}#${profile.discriminator}`;
+        const oauthID = profile.id;
+        const thumbnail =
+          profile.photos?.[0].value ??
+          (profile.avatar
+            ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+            : `https://cdn.discordapp.com/embed/avatars/${
+                Number(profile.discriminator) % 5
+              }.png`);
 
+        const requestObject = {
+          username,
+          email,
+          thumbnail,
+        };
 
+        let currentUser = await UserModel.findOne({ email: email });
+        console.log(oauthID + " " + currentUser?.oauthID);
+        console.log(oauthID == currentUser?.oauthID);
+        if (currentUser && oauthID == currentUser.oauthID) {
+          // Update Information
+          Object.assign(currentUser, requestObject);
+          await currentUser.save();
+          console.log("Current user is: ", currentUser);
+        } else if (currentUser == null) {
+          // Create New User
+          currentUser = await UserModel.create({
+            ...requestObject,
+            oauthID,
+          });
+          setTokenCookie(res, currentUser);
+        }
+
+        res
+          .status(200)
+          .redirect(
+            `http://localhost:3000/login?user=${JSON.stringify(requestObject)}`
+          );
+      } catch (err: any) {
+        res.status(500).json({ error: err.message });
+      }
+    })(req, res, next);
+  };
 
 // Accepts newUsername from the request body and user payload. Updates the user's username, sets a token cookie, and returns a status of 200 with a message indicating that the username was updated.
-export const updateUsername = async (req: Request, res: Response, user: UserPayload) => {
+export const updateUsername = async (
+  req: Request,
+  res: Response,
+  user: UserPayload
+) => {
   try {
     const { newUsername } = req.body;
     if (!newUsername) {
-      return res.status(400).json({ error: 'Username is required' });
+      return res.status(400).json({ error: "Username is required" });
     }
     if (user.email) {
       const updatedUser = await UserModel.findOneAndUpdate(
@@ -226,30 +232,36 @@ export const updateUsername = async (req: Request, res: Response, user: UserPayl
         { new: true }
       );
       if (!updatedUser) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ error: "User not found" });
       }
       setTokenCookie(res, updatedUser);
-      return res.status(200).json({ message: 'Username updated'});
+      return res.status(200).json({ message: "Username updated" });
     } else {
-      return res.status(400).json({ error: 'User email not found' });
+      return res.status(400).json({ error: "User email not found" });
     }
   } catch (error: any) {
-    return res.status(500).json({ error: 'Error updating username', message: error.message });
+    return res
+      .status(500)
+      .json({ error: "Error updating username", message: error.message });
   }
 };
 
 // Accepts email from the request body and user payload. Updates the user's email, sets a token cookie, and returns a status of 200 with a message indicating that the email was updated.
-export const updateEmail = async (req: Request, res: Response, user: UserPayload) => {
+export const updateEmail = async (
+  req: Request,
+  res: Response,
+  user: UserPayload
+) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+      return res.status(400).json({ error: "Email is required" });
     }
     if (user.email) {
       // Überprüfen, ob die neue E-Mail bereits vorhanden ist
       const emailExists = await UserModel.findOne({ email });
       if (emailExists) {
-        return res.status(400).json({ error: 'Email already exists' });
+        return res.status(400).json({ error: "Email already exists" });
       }
       const updatedUser = await UserModel.findOneAndUpdate(
         { email: user.email },
@@ -257,15 +269,17 @@ export const updateEmail = async (req: Request, res: Response, user: UserPayload
         { new: true }
       );
       if (!updatedUser) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ error: "User not found" });
       }
       setTokenCookie(res, updatedUser);
-      return res.status(200).json({ message: 'Email updated'});
+      return res.status(200).json({ message: "Email updated" });
     } else {
-      return res.status(400).json({ error: 'User email not found' });
+      return res.status(400).json({ error: "User email not found" });
     }
   } catch (error: any) {
-    return res.status(500).json({ error: 'Error updating email', message: error.message });
+    return res
+      .status(500)
+      .json({ error: "Error updating email", message: error.message });
   }
 };
 
@@ -279,19 +293,24 @@ export const handleLogout = (req: Request, res: Response) => {
 };
 
 // Accepts user payload. Deletes the user with the given email, and returns a status of 200 with a message indicating that the user was deleted.
-export const deleteUser = async (req: Request, res: Response, user: UserPayload) => {
+export const deleteUser = async (
+  req: Request,
+  res: Response,
+  user: UserPayload
+) => {
   try {
     if (user.email) {
       await UserModel.deleteOne({ email: user.email });
-      return res.status(200).json({ message: 'User deleted' });
+      return res.status(200).json({ message: "User deleted" });
     } else {
-      return res.status(400).json({ error: 'User email not found' });
+      return res.status(400).json({ error: "User email not found" });
     }
   } catch (error: any) {
-    return res.status(500).json({ error: 'Error deleting user', message: error.message });
+    return res
+      .status(500)
+      .json({ error: "Error deleting user", message: error.message });
   }
 };
-
 
 // Accepts a response object and a user object. Creates a JWT with the user's ID, email, and username, sets a cookie with the token, and returns the token. The cookie expires in 1 hour.
 const setTokenCookie = (res: Response, user: IUser) => {
@@ -310,12 +329,10 @@ const setTokenCookie = (res: Response, user: IUser) => {
   return token;
 };
 
-
-
 export default {
   postLogin,
   postRegister,
-  oauthAuthentication ,
+  oauthAuthentication,
   handleOAuthRedirect,
   handleLogout,
   requestPasswordReset,
@@ -323,5 +340,5 @@ export default {
   submitNewPassword,
   deleteUser,
   updateEmail,
-  updateUsername
+  updateUsername,
 };
