@@ -20,7 +20,10 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/auth', authRouter);
-
+//For Unit Testing
+app.get('/health-check', (req, res) => {
+  
+});
 //start app;
 if (!process.env.DATABASE_URI!) {
     console.error('DATABASE_URL not found in environment variables');
