@@ -22,7 +22,7 @@ app.use(cors());
 app.use('/auth', authRouter);
 //For Unit Testing
 app.get('/health-check', (req, res) => {
-  
+    res.sendStatus(200);
 });
 //start app;
 if (!process.env.DATABASE_URI!) {
