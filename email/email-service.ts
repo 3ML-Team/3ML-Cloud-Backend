@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { getResetPaswordEmailTemplate } from "../email/email-templates";
+import { getResetPaswordEmailTemplate } from "./email-templates";
 
 
 const hotmailTransporter = nodemailer.createTransport({

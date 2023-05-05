@@ -5,9 +5,8 @@ import bcrypt from "bcrypt";
 import "dotenv/config";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { getEmailTemplate, transporter } from "../asset/email-template";
 import { UserPayload } from "../interfaces/UserPayload";
-import { sendResetPasswordEmail } from "../email/email-configuration";
+import { sendResetPasswordEmail } from "../email/email-service";
 // Accepts username, email, and password from the request body.
 // Creates a new user in the database, hashes the password, sets a token cookie, and returns a status of 201 with the new user's username and email.
 export const postRegister = async (req: Request, res: Response) => {
