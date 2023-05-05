@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { getEmailTemplate, transporter } from "../asset/email-template";
 import { UserPayload } from "../interfaces/UserPayload";
+import { sendResetPasswordEmail } from "../email/email-configuration";
 // Accepts username, email, and password from the request body.
 // Creates a new user in the database, hashes the password, sets a token cookie, and returns a status of 201 with the new user's username and email.
 export const postRegister = async (req: Request, res: Response) => {
@@ -89,15 +90,8 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     user.resetToken = resetToken;
     user.resetTokenExpiration = new Date(Date.now() + 3600000);
     await user.save();
-    const emailTemplate: string = getEmailTemplate(resetToken);
-    //Redirect to the reset password page where users can enter their new password.
-    transporter.sendMail({
-      to: email,
-      from: process.env.OUTLOOK_EMAIL,
-      subject: "Password reset",
-      html: emailTemplate,
-    });
 
+    sendResetPasswordEmail(email, resetToken);
     res.status(200).json({ message: "Password reset email sent." });
   } catch (err) {
     console.log(err);

@@ -1,7 +1,4 @@
-import nodemailer from "nodemailer";
-
-
-export const getEmailTemplate = (token: string) => {
+export const getResetPaswordEmailTemplate = (token: string) => {
     return `<!DOCTYPE html>
     <html lang="en">
       <head>
@@ -83,12 +80,3 @@ export const getEmailTemplate = (token: string) => {
       </body>
     </html>`;
   };
-
-export const transporter = nodemailer.createTransport({
-    service: "hotmail",
-    auth: {
-      user: process.env.OUTLOOK_EMAIL,
-      pass: process.env.OUTLOOK_PASSWORD,
-    },
-  });
-  
