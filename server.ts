@@ -1,5 +1,4 @@
-import express, { Router, Request, Response } from 'express';
-import authRouter from './routes/auth-routes';
+import express, { Router, Request, Response } from 'express'
 import mongoose from 'mongoose';
 import "dotenv/config";
 import setupPassport from './middleware/passport-setup';
@@ -10,7 +9,8 @@ var logger = require('morgan');
 var cors = require('cors');
 const app = express();
 
-
+import authRouter from './routes/authRoutes'
+import userRouter from './routes/userRoutes'
 
 // Parsing Middleware
 app.use(express.json());
@@ -19,7 +19,11 @@ app.use(logger('dev'));
 app.use(cookieParser());
 app.use(cors());
 
+// app.use('/auth', authRouter);
 app.use('/auth', authRouter);
+app.use('/auth', userRouter);
+
+
 //For Unit Testing
 app.get('/health-check', (req, res) => {
     res.sendStatus(200);

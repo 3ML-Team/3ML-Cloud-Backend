@@ -317,6 +317,10 @@ const setTokenCookie = (res: Response, user: IUser) => {
   return token;
 };
 
+
+
+
+
 export default {
   postLogin,
   postRegister,

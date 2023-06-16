@@ -42,10 +42,11 @@ function setupPassport(passport: any) {
     )
   );
 
+
   passport.use(
     new GithubStrategy.Strategy(
       {
-        clientID: process.env.GITHUB_CLIENT_ID!,
+        clientID: process.env.GITHUB_CLIENT_ID as string,
         clientSecret: process.env.GITHUB_CLIENT_SECRET!,
         callbackURL: "/auth/github/redirect",
         scope: ["user:email"],
