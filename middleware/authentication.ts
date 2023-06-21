@@ -4,9 +4,7 @@ import { Request, Response, NextFunction } from "express";
 import { UserPayload } from "../interfaces/UserPayload";
 import { IUser } from "../model/user-model";
 
-export const authenticateUser = (
-  handler: (req: Request, res: Response) => void
-) => {
+export const authenticateUser = () => {
   return (req: Request, res: Response, next: NextFunction) => {
     console.log("Im isLoggedIn");
     const token = req.cookies.jwt;
@@ -18,13 +16,14 @@ export const authenticateUser = (
     try {
       const user: UserPayload = jwt.verify(token, process.env.JWT_SECRET as string) as UserPayload;
       req.user = user;
-      handler(req, res);
+      next();
     } catch (error) {
       console.error(error);
       return res.status(401).json({ error: "Unauthorized: Invalid token" });
     }
   };
 };
+
 
 // Accepts a response object and a user object. Creates a JWT with the user's ID, email, and username, sets a cookie with the token, and returns the token. The cookie expires in 1 hour.
 export const setTokenCookie = (res: Response, user: IUser) => {

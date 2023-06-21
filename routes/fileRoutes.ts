@@ -1,16 +1,32 @@
 import express, { Router, Request, Response } from "express";
-import fileSharingControler from "../controller/fileSharingControler";
+import fileSharingController from "../controller/fileSharingController";
+import multer from 'multer';
 import { authenticateUser } from "../middleware/authentication";
-import { UserPayload } from "../interfaces/UserPayload";
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, './uploads');
+  },
+  filename: function(req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const fileSharingRouter: Router = express.Router();
 
 fileSharingRouter.get(
     "/test",
-    authenticateUser((req: Request, res: Response) => {
-        fileSharingControler.test(req, res);
-    })
-  );
+    authenticateUser(),
+    fileSharingController.test
+);
 
+fileSharingRouter.post(
+    "/upload",
+    upload.array('files'),
+    authenticateUser(),
+    fileSharingController.uploadFiles
+);
 
 export default fileSharingRouter;
