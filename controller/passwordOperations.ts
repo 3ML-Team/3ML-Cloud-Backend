@@ -8,6 +8,7 @@ import { sendResetPasswordEmail } from "../email/email-service";
 // Accepts email from the request body. Generates a password reset token, updates the user with the token and expiration,
 // sends an email with the reset link, and returns a status of 200 with a message indicating that the email was sent.
 export const requestPasswordReset = async (req: Request, res: Response) => {
+  console.log(req.cookies);
   try {
     const email = req.body.email;
     const buffer = crypto.randomBytes(32);
