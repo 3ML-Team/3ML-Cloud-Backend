@@ -10,6 +10,7 @@ var cors = require('cors');
 const app = express();
 
 import authRouter from './routes/authRoutes'
+import passwordRouter from './routes/passwordRoutes'
 import userRouter from './routes/userRoutes'
 import fileSharingRouter from './routes/fileRoutes'
 
@@ -30,6 +31,7 @@ app.use(cors(corsOptions));
 
 // app.use('/auth', authRouter);
 app.use('/auth', authRouter);
+app.use('/auth', passwordRouter);
 app.use('/auth', userRouter);
 app.use('/file', fileSharingRouter);
 
