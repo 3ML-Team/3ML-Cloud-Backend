@@ -28,13 +28,22 @@ export const uploadFiles = async (req: Request, res: Response) => {
       })
     );
 
-    console.log(uploadedFiles);
-    res.sendStatus(200);
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
-};
+    //Todo: Sus. Data via file.id accessable. Security risk! Also if there is more than one file!!!
+    // const fileLinks = uploadedFiles.map((file) => {
+    //     const fileName = path.basename(file.path);
+    //     return `${req.headers.origin}/file/${fileName}`;
+    //   });
+
+    const file = uploadedFiles[0];
+    const fileLink = `${req.headers.origin}/data/${file.id}`;
+  
+      console.log(fileLink);
+      res.status(200).json(fileLink);
+    } catch (error) {
+      console.error(error);
+      res.sendStatus(500);
+    }
+  };
 
 export default {
   test,

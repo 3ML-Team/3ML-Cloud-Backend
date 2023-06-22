@@ -115,4 +115,6 @@ dist
 .idea
 
 #ignore uploads folder. May be moved somwhere else.
-.uploads
+/uploads/
+/uploads/*
+!/uploads/.gitkeep
