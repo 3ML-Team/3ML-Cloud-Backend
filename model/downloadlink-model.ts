@@ -1,8 +1,8 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
 interface IDownloadLink extends Document {
   linkId: string;
-  files: string[]; // Array of file IDs
+  files: Types.ObjectId[]; // Array of file IDs
   createdDate: Date;
 }
 
@@ -12,7 +12,10 @@ const downloadLinkSchema = new Schema({
     required: true,
     unique: true,
   },
-  files: [String],
+  files: [{
+    type: Schema.Types.ObjectId,
+    ref: 'File'
+  }],
   createdDate: {
     type: Date,
     default: Date.now,

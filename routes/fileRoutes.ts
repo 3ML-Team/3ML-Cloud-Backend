@@ -18,7 +18,6 @@ fileSharingRouter.post(
     fileSharingController.uploadFiles
 );
 
-fileSharingRouter.get('/data/:id', fileSharingController.downloadFile);
-fileSharingRouter.post('/data/:id', fileSharingController.downloadFile);
+fileSharingRouter.get('/data/:linkId', fileSharingController.downloadAll);
 
 export default fileSharingRouter;
