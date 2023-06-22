@@ -1,15 +1,25 @@
 import { Request, Response } from "express";
 import * as fs from "fs";
+import path from "path";
 import archiver from "archiver";
 import FileModel from "../model/file-model";
 import { UserPayload } from "../interfaces/UserPayload";
-import DownloadLinkModel from "../model/downloadlink-model";
 import { v4 as uuidv4 } from "uuid";
 
 export const test = (req: Request, res: Response): void => {
   console.log(req.user);
   res.sendStatus(200);
 };
+
+const extractTopTwoFolderPath = (filePath: string) => {
+  const parts = filePath.split(path.sep);
+
+  // Extrahieren Sie nur die ersten beiden Ordner des Pfads
+  const topTwoFoldersPath = parts.slice(0, 2).join(path.sep);
+  console.log(topTwoFoldersPath);
+  return topTwoFoldersPath;
+};
+
 
 export const uploadFiles = async (
   req: Request,
@@ -35,15 +45,30 @@ export const uploadFiles = async (
       })
     );
 
-    const fileIds = uploadedFiles.map((file) => file.id);
-    const downloadLink = new DownloadLinkModel({
-      linkId: uuidv4(),
-      files: fileIds,
-    });
-    await downloadLink.save();
+    let responseFile;
+
+    if (uploadedFiles.length === 1) {
+      responseFile = uploadedFiles[0];
+    } else {
+      const parentPath = extractTopTwoFolderPath(
+        uploadedFiles[0].path
+      );
+      const parentFile = new FileModel({
+        originalName: "download",
+        size: uploadedFiles.reduce((total, file) => total + file.size, 0),
+        type: "folder",
+        path: parentPath,
+        lastModified: new Date(),
+        owner: user.userId,
+        children: uploadedFiles.map((file) => file.id),
+      });
+
+      await parentFile.save();
+      responseFile = parentFile;
+    }
 
     const currentHost = req.headers.host;
-    const fileLink = `http://${currentHost}/file/data/${downloadLink.linkId}`;
+    const fileLink = `http://${currentHost}/file/data/${responseFile.id}`;
 
     res.status(200).json(fileLink);
   } catch (error) {
@@ -57,23 +82,22 @@ export const downloadAll = async (
   res: Response
 ): Promise<void> => {
   try {
-    const linkId = req.params.linkId;
-    console.log("linkId in downloadAll ist: " + linkId);
-    const downloadLink = await DownloadLinkModel.findOne({ linkId: linkId });
+    const fileId = req.params.fileId;
+    const file = await FileModel.findById(fileId);
 
-    if (!downloadLink) {
-      res.status(404).json({ error: "Download link not found" });
+    if (!file) {
+      res.status(404).json({ error: "File not found" });
       return;
     }
 
-    const files = await FileModel.find({ _id: { $in: downloadLink.files } });
-    // if there's only one file, download it directly
-    if (files.length === 1) {
-      const file = files[0];
+    // If it's a regular file, download it
+    if (file.type !== "folder") {
       return res.download(file.path, file.originalName);
     }
 
-    
+    // If it's a folder, zip all its children
+    const files = await FileModel.find({ _id: { $in: file.children } });
+
     const archive = archiver("zip", {
       zlib: { level: 9 },
     });
@@ -83,17 +107,20 @@ export const downloadAll = async (
     });
 
     res.setHeader("Content-Type", "application/zip");
-    res.setHeader("Content-Disposition", `attachment; filename="download.zip"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${file.originalName}.zip"`
+    );
 
     archive.pipe(res);
 
-    for (const file of files) {
-      const fileStream = fs.createReadStream(file.path);
+    for (const childFile of files) {
+      const fileStream = fs.createReadStream(childFile.path);
       fileStream.on("error", (err: Error) => {
         console.error(`Error in reading file: ${err}`);
         return res.status(500).send({ error: "Error in reading file" });
       });
-      archive.append(fileStream, { name: file.originalName });
+      archive.append(fileStream, { name: childFile.originalName });
     }
 
     archive.finalize();
@@ -102,6 +129,7 @@ export const downloadAll = async (
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 export default {
   test,

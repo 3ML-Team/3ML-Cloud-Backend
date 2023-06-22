@@ -8,6 +8,7 @@ interface IFile extends Document {
   path: string;
   lastModified: Date;
   owner: IUser;
+  children: IFile[]; 
 }
 
 const fileSchema = new Schema({
@@ -34,8 +35,11 @@ const fileSchema = new Schema({
   owner: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
-  }
+  },
+  children: [{
+    type: Schema.Types.ObjectId,
+    ref: 'File'
+  }]
 });
 
 const File = model<IFile>('File', fileSchema);
