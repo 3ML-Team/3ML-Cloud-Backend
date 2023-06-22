@@ -1,23 +1,32 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { v4 as uuidv4 } from "uuid";
+
+export const getUserFolderPath = (req: any): string => {
+  if (!req.user) {
+    throw new Error('No user present in request');
+  }
+
+  return path.join('./uploads', `${req.user.username}-${req.user.userId}`);
+}
 
 export const storage = multer.diskStorage({
   destination: function(req: any, file, cb) {
-    if (!req.user) {
-      return cb(new Error('No user present in request'), './uploads');
+    try {
+      const userFolderPath = getUserFolderPath(req);
+
+      if (!fs.existsSync(userFolderPath)) {
+        fs.mkdirSync(userFolderPath, { recursive: true });
+      }
+
+      cb(null, userFolderPath);
+    } catch (error) {
+      cb(error instanceof Error ? error : null, './uploads');
     }
-
-    const userFolderPath = path.join('./uploads', `${req.user.username}-${req.user.userId}`);
-
-    if (!fs.existsSync(userFolderPath)) {
-      fs.mkdirSync(userFolderPath, { recursive: true });
-    }
-
-    cb(null, userFolderPath);
   },
   filename: function(req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+    cb(null, uuidv4() + '-' + file.originalname);
   }
 });
 

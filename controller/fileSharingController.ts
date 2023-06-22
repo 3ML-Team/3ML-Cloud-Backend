@@ -1,25 +1,14 @@
 import { Request, Response } from "express";
 import * as fs from "fs";
-import path from "path";
 import archiver from "archiver";
 import FileModel from "../model/file-model";
 import { UserPayload } from "../interfaces/UserPayload";
-import { v4 as uuidv4 } from "uuid";
+import {getUserFolderPath} from "../middleware/multerConfig"
 
 export const test = (req: Request, res: Response): void => {
   console.log(req.user);
   res.sendStatus(200);
 };
-
-const extractTopTwoFolderPath = (filePath: string) => {
-  const parts = filePath.split(path.sep);
-
-  // Extrahieren Sie nur die ersten beiden Ordner des Pfads
-  const topTwoFoldersPath = parts.slice(0, 2).join(path.sep);
-  console.log(topTwoFoldersPath);
-  return topTwoFoldersPath;
-};
-
 
 export const uploadFiles = async (
   req: Request,
@@ -50,9 +39,10 @@ export const uploadFiles = async (
     if (uploadedFiles.length === 1) {
       responseFile = uploadedFiles[0];
     } else {
-      const parentPath = extractTopTwoFolderPath(
-        uploadedFiles[0].path
+      const parentPath = getUserFolderPath(
+        req
       );
+      //Todo: use enum
       const parentFile = new FileModel({
         originalName: "download",
         size: uploadedFiles.reduce((total, file) => total + file.size, 0),
