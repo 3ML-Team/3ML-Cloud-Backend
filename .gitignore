@@ -113,3 +113,6 @@ dist
 
 
 .idea
+
+#ignore uploads folder. May be moved somwhere else.
+.uploads
