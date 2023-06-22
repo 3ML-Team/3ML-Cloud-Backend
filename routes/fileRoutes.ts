@@ -24,8 +24,8 @@ fileSharingRouter.get(
 
 fileSharingRouter.post(
     "/upload",
-    upload.array('files'),
     authenticateUser(),
+    upload.array('files'),
     fileSharingController.uploadFiles
 );
 

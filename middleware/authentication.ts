@@ -6,8 +6,8 @@ import { IUser } from "../model/user-model";
 
 export const authenticateUser = () => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log("Im isLoggedIn");
     const token = req.cookies.jwt;
+    console.log("Im isLoggedIn " + token);
 
     if (!token) {
       return res.status(401).json({ error: "Unauthorized: Missing token" });
