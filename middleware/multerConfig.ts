@@ -8,7 +8,7 @@ export const getUserFolderPath = (req: any): string => {
     throw new Error('No user present in request');
   }
 
-  return path.join('./uploads', `${req.user.username}-${req.user.userId}`);
+  return path.join('./uploads', `${(req.user.username as string).replace(/\s/g, '_')}-${req.user.userId}`);
 }
 
 export const storage = multer.diskStorage({
