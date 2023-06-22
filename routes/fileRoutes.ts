@@ -1,18 +1,7 @@
 import express, { Router, Request, Response } from "express";
 import fileSharingController from "../controller/fileSharingController";
-import multer from 'multer';
 import { authenticateUser } from "../middleware/authentication";
-
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, './uploads');
-  },
-  filename: function(req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-
-const upload = multer({ storage: storage });
+import { upload } from "../middleware/multerConfig";
 
 const fileSharingRouter: Router = express.Router();
 
