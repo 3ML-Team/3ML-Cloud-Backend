@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 import { IUser } from './user-model';
 
 interface IFile extends Document {
@@ -8,7 +8,8 @@ interface IFile extends Document {
   path: string;
   lastModified: Date;
   owner: IUser;
-  children: IFile[]; 
+  children: IFile[];
+  parent: IFile | null;
 }
 
 const fileSchema = new Schema({
@@ -39,7 +40,12 @@ const fileSchema = new Schema({
   children: [{
     type: Schema.Types.ObjectId,
     ref: 'File'
-  }]
+  }],
+  parent: {
+    type: Schema.Types.ObjectId,
+    ref: 'File',
+    default: null,
+  },
 });
 
 const File = model<IFile>('File', fileSchema);

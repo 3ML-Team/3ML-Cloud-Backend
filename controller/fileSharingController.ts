@@ -11,41 +11,75 @@ export const test = (req: Request, res: Response): void => {
   res.sendStatus(200);
 };
 
-export const uploadFiles = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+
+
+export const uploadFiles = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = req.user as UserPayload;
     const files = req.files as Express.Multer.File[];
-    const relativePath = req.query.relativePath as string; // Zugriff auf den relativen Pfad
+    const relativePaths = JSON.parse(req.body.relativePath); // Parse 'relativePath' as JSON
 
-    console.log("relative path: " + relativePath + " normalPath" + files[0].path);
-    const uploadedFiles = await Promise.all(
-      files.map(async (file) => {
-        const newFile = new FileModel({
-          originalName: file.originalname,
-          size: file.size,
-          type: file.mimetype,
-          path: path.join(getUserFolderPath(req), relativePath),
-          lastModified: new Date(),
-          owner: user.userId,
-        });
+    let uploadedFiles = [];
 
-        await newFile.save();
-        return newFile;
-      })
-    );
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
+      const fullPath = path.join(getUserFolderPath(req), relativePaths[index]);
+
+      const newFile = new FileModel({
+        originalName: file.originalname,
+        size: file.size,
+        type: file.mimetype,
+        path: fullPath,
+        lastModified: new Date(),
+        owner: user.userId,
+      });
+
+      await newFile.save();
+
+      const pathParts = relativePaths[index].split('/').filter((part: string) => part); // Use '/' to split paths
+      let currentParentPath = getUserFolderPath(req);
+      let parentId = null;
+
+      for (const part of pathParts) {
+        currentParentPath = path.join(currentParentPath, part);
+
+        let parentFile = await FileModel.findOne({ path: currentParentPath, originalName: part });
+        if (!parentFile) {
+          parentFile = new FileModel({
+            originalName: part,
+            size: 0,
+            type: 'folder',
+            path: currentParentPath,
+            lastModified: new Date(),
+            owner: user.userId,
+            children: [],
+          });
+          await parentFile.save();
+        }
+
+        if (!parentFile.children.includes(newFile._id)) {
+          parentFile.children.push(newFile._id);
+          parentFile.size += newFile.size;
+          parentFile.lastModified = new Date();
+          await parentFile.save();
+        }
+
+        parentId = parentFile._id;
+      }
+
+      newFile.parent = parentId;
+      await newFile.save();
+
+      uploadedFiles.push(newFile);
+    }
 
     let responseFile;
 
     if (uploadedFiles.length === 1) {
       responseFile = uploadedFiles[0];
     } else {
-      const parentPath = getUserFolderPath(
-        req
-      );
-      //Todo: use enum
+      const parentPath = getUserFolderPath(req);
+
       const parentFile = new FileModel({
         originalName: "download",
         size: uploadedFiles.reduce((total, file) => total + file.size, 0),
@@ -71,12 +105,17 @@ export const uploadFiles = async (
 };
 
 
+
+
+
 export const downloadAll = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const fileId = req.params.fileId;
+    console.log("fileId: " + fileId);
+
     const file = await FileModel.findById(fileId);
 
     if (!file) {
@@ -91,6 +130,7 @@ export const downloadAll = async (
 
     // If it's a folder, zip all its children
     const files = await FileModel.find({ _id: { $in: file.children } });
+    console.log("files " + files);
 
     const archive = archiver("zip", {
       zlib: { level: 9 },
