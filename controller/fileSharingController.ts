@@ -4,6 +4,7 @@ import archiver from "archiver";
 import FileModel from "../model/file-model";
 import { UserPayload } from "../interfaces/UserPayload";
 import {getUserFolderPath} from "../middleware/multerConfig"
+import path from "path";
 
 export const test = (req: Request, res: Response): void => {
   console.log(req.user);
@@ -17,14 +18,16 @@ export const uploadFiles = async (
   try {
     const user = req.user as UserPayload;
     const files = req.files as Express.Multer.File[];
+    const relativePath = req.query.relativePath as string; // Zugriff auf den relativen Pfad
 
+    console.log("relative path: " + relativePath + " normalPath" + files[0].path);
     const uploadedFiles = await Promise.all(
       files.map(async (file) => {
         const newFile = new FileModel({
           originalName: file.originalname,
           size: file.size,
           type: file.mimetype,
-          path: file.path,
+          path: path.join(getUserFolderPath(req), relativePath),
           lastModified: new Date(),
           owner: user.userId,
         });
@@ -66,6 +69,7 @@ export const uploadFiles = async (
     res.sendStatus(500);
   }
 };
+
 
 export const downloadAll = async (
   req: Request,
