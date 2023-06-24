@@ -40,10 +40,6 @@ export const setTokenCookie = (res: Response, user: IUser) => {
     domain: 'localhost',
     secure: false, // set to true if your using https
   });
-  
-  console.log("payload is set with token");
-  console.log(payload);
-  console.log(token);
 
   return token;
 };

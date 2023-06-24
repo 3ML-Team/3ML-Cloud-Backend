@@ -1,7 +1,7 @@
 import { Schema, model, Document, Types } from 'mongoose';
 import { IUser } from './user-model';
 
-interface IFile extends Document {
+export interface IFile extends Document {
   originalName: string;
   size: number;
   type: string;
